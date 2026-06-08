@@ -1,4 +1,4 @@
-import CountUp from "../CountUp";
+import CountUp from "../ui/CountUp";
 
 const numbers = [
     {
