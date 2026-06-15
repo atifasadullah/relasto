@@ -9,7 +9,7 @@ from .models import Property, PropertyImage, VisitRequest
 class PropertyImageSerializer(ModelSerializer):
     class Meta:
         model = PropertyImage
-        fields = ["slug", "image"]
+        fields = ["image"]
 
 
 class PropertySerializer(ModelSerializer):
