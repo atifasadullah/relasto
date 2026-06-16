@@ -1,15 +1,22 @@
 from django.utils import timezone
 from django.db.models import Q
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from rest_framework.exceptions import ValidationError
 from core.serializers import UserSerializer
 from .models import Property, PropertyImage, VisitRequest
 
 
 class PropertyImageSerializer(ModelSerializer):
+    image = SerializerMethodField()
+
     class Meta:
         model = PropertyImage
         fields = ["image"]
+
+    def get_image(self, obj):
+        if obj.image and str(obj.image).startswith(("http://", "https://")):
+            return str(obj.image)
+        return obj.image.url if obj.image else None
 
 
 class PropertySerializer(ModelSerializer):
