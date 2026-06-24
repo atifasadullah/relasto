@@ -44,12 +44,15 @@ class PropertyImageViewSet(ModelViewSet):
         return PropertyImage.objects.filter(property=property)
 
     def perform_create(self, serializer):
-        property = self.kwargs["property_slug"]
-        if property and property.agent != self.request.user:
+        property = self.kwargs["property_pk"]
+        property_object = Property.objects.get(pk=property)
+        print(property_object.agent, "*" * 100)
+        print(self.request.user, "*" * 100)
+        if property and property_object.agent != self.request.user:
             raise ValidationError(
                 {"response": "Only agents can create property's image."}
             )
-        serializer.save(property=property)
+        serializer.save(property=property_object)
 
     def perform_update(self, serializer):
         property = serializer.validated_data.get("property")

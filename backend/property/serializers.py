@@ -7,16 +7,16 @@ from .models import Property, PropertyImage, VisitRequest
 
 
 class PropertyImageSerializer(ModelSerializer):
-    image = SerializerMethodField()
+    # image = SerializerMethodField()
 
     class Meta:
         model = PropertyImage
         fields = ["image"]
 
-    def get_image(self, obj):
-        if obj.image and str(obj.image).startswith(("http://", "https://")):
-            return str(obj.image)
-        return obj.image.url if obj.image else None
+    # def get_image(self, obj):
+    #     if obj.image and str(obj.image).startswith(("http://", "https://")):
+    #         return str(obj.image)
+    #     return obj.image.url if obj.image else None
 
 
 class PropertySerializer(ModelSerializer):
