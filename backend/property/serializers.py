@@ -11,7 +11,7 @@ class PropertyImageSerializer(ModelSerializer):
 
     class Meta:
         model = PropertyImage
-        fields = ["image"]
+        fields = ["image", "rank"]
 
     # def get_image(self, obj):
     #     if obj.image and str(obj.image).startswith(("http://", "https://")):

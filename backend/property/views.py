@@ -46,12 +46,27 @@ class PropertyImageViewSet(ModelViewSet):
     def perform_create(self, serializer):
         property = self.kwargs["property_pk"]
         property_object = Property.objects.get(pk=property)
-        print(property_object.agent, "*" * 100)
-        print(self.request.user, "*" * 100)
         if property and property_object.agent != self.request.user:
             raise ValidationError(
                 {"response": "Only agents can create property's image."}
             )
+        q = list(PropertyImage.objects.filter(property=property))
+        secondary_images = 0
+        for i in list(range(len(q))):
+            if serializer.validated_data.get("rank") == "P" and q[i].rank == "P":
+                raise ValidationError(
+                    {
+                        "response": "Primary image is already settled, you can replace it with another."
+                    }
+                )
+            if serializer.validated_data.get("rank") == "S" and q[i].rank == "P":
+                secondary_images += 1
+                if secondary_images + 1 == 2:
+                    raise ValidationError(
+                        {
+                            "response": "Two Secondary images are already settled, you can replace them with another ones."
+                        }
+                    )
         serializer.save(property=property_object)
 
     def perform_update(self, serializer):

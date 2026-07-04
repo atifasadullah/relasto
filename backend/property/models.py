@@ -49,6 +49,9 @@ class Property(models.Model):
 
 
 class PropertyImage(models.Model):
+    RANK_CHOICES = [("P", "Primary"), ("S", "Secondary"), ("N", "None")]
+    rank = models.CharField(max_length=1, choices=RANK_CHOICES, default="N")
+    order = models.IntegerField(validators=[MinValueValidator(1)])
     property = models.ForeignKey(
         Property, on_delete=models.CASCADE, related_name="images"
     )
