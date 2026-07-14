@@ -108,6 +108,46 @@ DATABASES = {
     }
 }
 
+# django-refresh: seed ordering for dev_seed/sql/*.sql.
+# Seed name keys match the auto-discovered names (file stem, no numeric
+# prefix); the runner topologically sorts by depends_on, so `images.sql`
+# runs AFTER `properties.sql` instead of alphabetically ahead of it.
+DJANGO_REFRESH = {
+    "USE_PSQL": False,
+    "ATOMIC_SEEDS": True,
+    "SEEDS": {
+        "users": {
+            "file": "users.sql",
+            "label": "Users",
+        },
+        "profiles": {
+            "file": "profiles.sql",
+            "label": "Profiles",
+            "depends_on": ["users"],
+        },
+        "properties": {
+            "file": "properties.sql",
+            "label": "Properties",
+            "depends_on": ["users"],
+        },
+        "images": {
+            "file": "images.sql",
+            "label": "Images",
+            "depends_on": ["properties"],
+        },
+        "reviews": {
+            "file": "reviews.sql",
+            "label": "Reviews",
+            "depends_on": ["users"],
+        },
+        "visit_requests": {
+            "file": "visit_requests.sql",
+            "label": "Visit Requests",
+            "depends_on": ["users", "properties"],
+        },
+    },
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
