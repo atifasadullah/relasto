@@ -1,6 +1,5 @@
-"use client";
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
     NavigationMenu,
@@ -13,12 +12,13 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
 import { AppLogo } from "./logo";
 
-// Hamburger icon component
+// Hamburger icon component with animated path states
 const HamburgerIcon = ({ className, ...props }) => (
     <svg
-        aria-label="Menu"
+        aria-label="Toggle Menu"
         className={cn("pointer-events-none", className)}
         fill="none"
         height={16}
@@ -47,12 +47,11 @@ const HamburgerIcon = ({ className, ...props }) => (
     </svg>
 );
 
-// Default navigation links
 const defaultNavigationLinks = [
-    { href: "#", label: "Home", active: true },
-    { href: "#features", label: "Features" },
-    { href: "#pricing", label: "Pricing" },
-    { href: "#about", label: "About" },
+    { to: "/", label: "Home" },
+    { to: "/properties", label: "Properties" },
+    { to: "/pricing", label: "Pricing" },
+    { to: "/about", label: "About" },
 ];
 
 export const Navbar = React.forwardRef(
@@ -60,69 +59,35 @@ export const Navbar = React.forwardRef(
         {
             className,
             logo = <AppLogo />,
-            logoHref = "#",
+            logoHref = "/",
             navigationLinks = defaultNavigationLinks,
             signInText = "Sign In",
-            signInHref = "#signin",
+            signInHref = "/signin",
             ctaText = "Get Started",
-            ctaHref = "#get-started",
+            ctaHref = "/get-started",
             onSignInClick,
             onCtaClick,
             ...props
         },
         ref
     ) => {
-        const [isMobile, setIsMobile] = useState(false);
-        const containerRef = useRef(null);
-
-        useEffect(() => {
-            const checkWidth = () => {
-                if (containerRef.current) {
-                    const width = containerRef.current.offsetWidth;
-                    setIsMobile(width < 768); // 768px is md breakpoint
-                }
-            };
-
-            checkWidth();
-
-            const resizeObserver = new ResizeObserver(checkWidth);
-            if (containerRef.current) {
-                resizeObserver.observe(containerRef.current);
-            }
-
-            return () => {
-                resizeObserver.disconnect();
-            };
-        }, []);
-
-        // Combine refs
-        const combinedRef = React.useCallback(
-            (node) => {
-                containerRef.current = node;
-                if (typeof ref === "function") {
-                    ref(node);
-                } else if (ref) {
-                    ref.current = node;
-                }
-            },
-            [ref]
-        );
+        const [isOpen, setIsOpen] = useState(false);
 
         return (
             <header
+                ref={ref}
                 className={cn(
-                    "sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6 [&_*]:no-underline",
+                    "sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6",
                     className
                 )}
-                ref={combinedRef}
                 {...props}
             >
                 <div className="container mx-auto flex h-16 max-w-screen-2xl items-center justify-between gap-4">
-                    {/* Left side */}
-                    <div className="flex items-center gap-2">
-                        {/* Mobile menu trigger */}
-                        {isMobile && (
-                            <Popover>
+                    {/* Left side: Logo & Navigation */}
+                    <div className="flex items-center gap-4">
+                        {/* Mobile Menu Trigger */}
+                        <div className="md:hidden">
+                            <Popover open={isOpen} onOpenChange={setIsOpen}>
                                 <PopoverTrigger asChild>
                                     <Button
                                         className="group h-9 w-9 hover:bg-accent hover:text-accent-foreground"
@@ -134,30 +99,33 @@ export const Navbar = React.forwardRef(
                                 </PopoverTrigger>
                                 <PopoverContent
                                     align="start"
-                                    className="w-48 p-2"
+                                    className="w-48 p-2 mt-2"
                                 >
-                                    <NavigationMenu className="max-w-none">
-                                        <NavigationMenuList className="flex-col items-start gap-1">
+                                    <NavigationMenu className="max-w-none w-full">
+                                        <NavigationMenuList className="flex-col items-start gap-1 w-full">
                                             {navigationLinks.map(
                                                 (link, index) => (
                                                     <NavigationMenuItem
                                                         className="w-full"
                                                         key={index}
                                                     >
-                                                        <button
-                                                            type="button"
-                                                            className={cn(
-                                                                "flex w-full items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer no-underline",
-                                                                link.active
-                                                                    ? "bg-accent text-accent-foreground"
-                                                                    : "text-foreground/80"
-                                                            )}
-                                                            onClick={(e) =>
-                                                                e.preventDefault()
+                                                        <Link
+                                                            to={link.to}
+                                                            onClick={() =>
+                                                                setIsOpen(false)
                                                             }
+                                                            activeProps={{
+                                                                className:
+                                                                    "bg-accent text-accent-foreground font-semibold",
+                                                            }}
+                                                            inactiveProps={{
+                                                                className:
+                                                                    "text-foreground/80 hover:text-foreground",
+                                                            }}
+                                                            className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground no-underline"
                                                         >
                                                             {link.label}
-                                                        </button>
+                                                        </Link>
                                                     </NavigationMenuItem>
                                                 )
                                             )}
@@ -165,70 +133,82 @@ export const Navbar = React.forwardRef(
                                     </NavigationMenu>
                                 </PopoverContent>
                             </Popover>
-                        )}
-                        {/* Main nav */}
-                        <div className="flex items-center gap-6">
-                            <button
-                                type="button"
-                                className="flex items-center space-x-2 text-primary hover:text-primary/90 transition-colors cursor-pointer"
-                                onClick={(e) => e.preventDefault()}
-                            >
-                                <div className="text-2xl">{logo}</div>
-                            </button>
-                            {/* Navigation menu */}
-                            {!isMobile && (
-                                <NavigationMenu className="flex">
-                                    <NavigationMenuList className="gap-1">
-                                        {navigationLinks.map((link, index) => (
-                                            <NavigationMenuItem key={index}>
-                                                <button
-                                                    type="button"
-                                                    className={cn(
-                                                        "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer no-underline",
-                                                        link.active
-                                                            ? "bg-accent text-accent-foreground"
-                                                            : "text-foreground/80 hover:text-foreground"
-                                                    )}
-                                                    onClick={(e) =>
-                                                        e.preventDefault()
-                                                    }
-                                                >
-                                                    {link.label}
-                                                </button>
-                                            </NavigationMenuItem>
-                                        ))}
-                                    </NavigationMenuList>
-                                </NavigationMenu>
-                            )}
+                        </div>
+
+                        {/* Logo */}
+                        <Link
+                            to={logoHref}
+                            className="flex items-center space-x-2 text-primary hover:text-primary/90 transition-colors no-underline"
+                        >
+                            <div className="text-2xl">{logo}</div>
+                        </Link>
+
+                        {/* Desktop Navigation */}
+                        <div className="hidden md:flex items-center gap-6">
+                            <NavigationMenu>
+                                <NavigationMenuList className="gap-1">
+                                    {navigationLinks.map((link, index) => (
+                                        <NavigationMenuItem key={index}>
+                                            <Link
+                                                to={link.to}
+                                                activeProps={{
+                                                    className:
+                                                        "bg-accent text-accent-foreground font-semibold",
+                                                }}
+                                                inactiveProps={{
+                                                    className:
+                                                        "text-foreground/80 hover:text-foreground",
+                                                }}
+                                                className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-underline"
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        </NavigationMenuItem>
+                                    ))}
+                                </NavigationMenuList>
+                            </NavigationMenu>
                         </div>
                     </div>
-                    {/* Right side */}
+
+                    {/* Right side: Auth Action Buttons */}
                     <div className="flex items-center gap-3">
-                        <Button
-                            className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                if (onSignInClick) {
-                                    onSignInClick();
-                                }
-                            }}
-                            size="sm"
-                            variant="ghost"
-                        >
-                            {signInText}
-                        </Button>
-                        <Button
-                            className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                if (onCtaClick) {
-                                    onCtaClick();
-                                }
-                            }}
-                            size="sm"
-                        >
-                            {ctaText}
-                        </Button>
+                        {onSignInClick ? (
+                            <Button
+                                className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                                onClick={onSignInClick}
+                                size="sm"
+                                variant="ghost"
+                            >
+                                {signInText}
+                            </Button>
+                        ) : (
+                            <Button
+                                asChild
+                                className="text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                                size="sm"
+                                variant="ghost"
+                            >
+                                <Link to={signInHref}>{signInText}</Link>
+                            </Button>
+                        )}
+
+                        {onCtaClick ? (
+                            <Button
+                                className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
+                                onClick={onCtaClick}
+                                size="sm"
+                            >
+                                {ctaText}
+                            </Button>
+                        ) : (
+                            <Button
+                                asChild
+                                className="text-sm font-medium px-4 h-9 rounded-md shadow-sm"
+                                size="sm"
+                            >
+                                <Link to={ctaHref}>{ctaText}</Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
             </header>
@@ -239,12 +219,3 @@ export const Navbar = React.forwardRef(
 Navbar.displayName = "Navbar";
 
 export { AppLogo, HamburgerIcon };
-
-// Demo
-export function Demo() {
-    return (
-        <div className="fixed inset-0">
-            <Navbar />
-        </div>
-    );
-}
